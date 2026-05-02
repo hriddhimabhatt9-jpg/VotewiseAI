@@ -1,5 +1,4 @@
-"use client";
-
+import React, { useMemo } from "react";
 import { cn } from "@/lib/utils";
 
 interface BadgeProps {
@@ -9,7 +8,7 @@ interface BadgeProps {
   className?: string;
 }
 
-export function Badge({ children, variant = "default", size = "sm", className }: BadgeProps) {
+export const Badge = React.memo(({ children, variant = "default", size = "sm", className }: BadgeProps) => {
   const variants = {
     default: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
     success: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800",
@@ -36,7 +35,9 @@ export function Badge({ children, variant = "default", size = "sm", className }:
       {children}
     </span>
   );
-}
+});
+
+Badge.displayName = "Badge";
 
 interface ProgressBarProps {
   value: number;
@@ -47,15 +48,15 @@ interface ProgressBarProps {
   className?: string;
 }
 
-export function ProgressBar({
+export const ProgressBar = React.memo(({
   value,
   max = 100,
   color = "blue",
   size = "md",
   showLabel = false,
   className,
-}: ProgressBarProps) {
-  const percentage = Math.min((value / max) * 100, 100);
+}: ProgressBarProps) => {
+  const percentage = useMemo(() => Math.min((value / max) * 100, 100), [value, max]);
 
   const colors = {
     blue: "from-blue-400 to-indigo-500",
@@ -97,7 +98,9 @@ export function ProgressBar({
       </div>
     </div>
   );
-}
+});
+
+ProgressBar.displayName = "ProgressBar";
 
 interface AvatarProps {
   src?: string;
@@ -106,7 +109,7 @@ interface AvatarProps {
   className?: string;
 }
 
-export function Avatar({ src, name, size = "md", className }: AvatarProps) {
+export const Avatar = React.memo(({ src, name, size = "md", className }: AvatarProps) => {
   const sizes = {
     sm: "w-8 h-8 text-xs",
     md: "w-10 h-10 text-sm",
@@ -114,12 +117,14 @@ export function Avatar({ src, name, size = "md", className }: AvatarProps) {
     xl: "w-20 h-20 text-2xl",
   };
 
-  const initials = name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+  const initials = useMemo(() => 
+    name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
+  , [name]);
 
   if (src) {
     return (
@@ -142,7 +147,9 @@ export function Avatar({ src, name, size = "md", className }: AvatarProps) {
       {initials}
     </div>
   );
-}
+});
+
+Avatar.displayName = "Avatar";
 
 interface ScoreRingProps {
   score: number;
@@ -151,17 +158,17 @@ interface ScoreRingProps {
   className?: string;
 }
 
-export function ScoreRing({ score, size = 120, strokeWidth = 8, className }: ScoreRingProps) {
+export const ScoreRing = React.memo(({ score, size = 120, strokeWidth = 8, className }: ScoreRingProps) => {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (score / 100) * circumference;
 
-  const getColor = (s: number) => {
-    if (s >= 80) return "#10b981";
-    if (s >= 60) return "#3b82f6";
-    if (s >= 40) return "#f59e0b";
+  const color = useMemo(() => {
+    if (score >= 80) return "#10b981";
+    if (score >= 60) return "#3b82f6";
+    if (score >= 40) return "#f59e0b";
     return "#ef4444";
-  };
+  }, [score]);
 
   return (
     <div className={cn("relative inline-flex items-center justify-center", className)}>
@@ -180,7 +187,7 @@ export function ScoreRing({ score, size = 120, strokeWidth = 8, className }: Sco
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke={getColor(score)}
+          stroke={color}
           strokeWidth={strokeWidth}
           strokeDasharray={circumference}
           strokeDashoffset={offset}
@@ -194,4 +201,6 @@ export function ScoreRing({ score, size = 120, strokeWidth = 8, className }: Sco
       </div>
     </div>
   );
-}
+});
+
+ScoreRing.displayName = "ScoreRing";

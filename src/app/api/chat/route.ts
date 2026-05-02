@@ -23,9 +23,13 @@ export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
 
-    if (!process.env.OPENAI_API_KEY) {
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      return NextResponse.json({ error: "Invalid messages provided" }, { status: 400 });
+    }
+
+    if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'dummy_key') {
       // Return a realistic mock response if API key is missing
-      const lastUserMessage = messages[messages.length - 1].content.toLowerCase();
+      const lastUserMessage = messages[messages.length - 1].content?.toLowerCase() || "";
       let mockReply = "I'm currently in demo mode. To get real-time AI responses, please configure your OpenAI API key. However, based on my knowledge base: ";
 
       if (lastUserMessage.includes("register")) {
@@ -51,11 +55,12 @@ export async function POST(req: Request) {
         ...messages
       ],
       temperature: 0.7,
+      max_tokens: 1000,
     });
 
     return NextResponse.json(response.choices[0].message);
   } catch (error: any) {
-    console.error("AI Error:", error);
-    return NextResponse.json({ error: "Failed to fetch response" }, { status: 500 });
+    // In production, log to a monitoring service
+    return NextResponse.json({ error: "Service temporarily unavailable" }, { status: 500 });
   }
 }

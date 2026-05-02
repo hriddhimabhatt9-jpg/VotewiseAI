@@ -65,7 +65,7 @@ export default function LeaderboardPage() {
                   </div>
                 </div>
                 <h3 className="font-bold text-lg mb-1">{player.name}</h3>
-                <Badge variant="outline" className="mb-3">{player.badge}</Badge>
+                <Badge variant="info" className="mb-3">{player.badge}</Badge>
                 <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-xl p-3 flex justify-between items-center">
                   <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-bold">
                     <Star className="w-4 h-4" /> {player.xp} XP

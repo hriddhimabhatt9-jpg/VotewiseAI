@@ -100,9 +100,9 @@ export default function ScannerPage() {
                 <p className="font-bold text-lg mb-1">Click to Upload</p>
                 <p className="text-sm text-gray-500 text-center">or drag and drop your document here</p>
                 <div className="mt-6 flex gap-2">
-                  <Badge variant="outline">JPEG</Badge>
-                  <Badge variant="outline">PNG</Badge>
-                  <Badge variant="outline">PDF</Badge>
+                  <Badge variant="default">JPEG</Badge>
+                  <Badge variant="default">PNG</Badge>
+                  <Badge variant="default">PDF</Badge>
                 </div>
               </div>
             )}

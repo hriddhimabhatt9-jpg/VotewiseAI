@@ -9,6 +9,8 @@ import { useAuthStore } from "@/store";
 
 import { candidatesData as mockCandidates } from "@/lib/data";
 
+type MachineState = "idle" | "verifying" | "voting" | "confirming" | "success";
+
 export default function SimulatorPage() {
   const { user } = useAuthStore();
   const [state, setState] = useState<MachineState>("idle");
@@ -106,7 +108,7 @@ export default function SimulatorPage() {
                         <span className="text-sm text-gray-500">{c.party}</span>
                       </div>
                       <div className="w-20 flex items-center justify-center border-l border-gray-300 dark:border-gray-700 text-3xl">
-                        {c.symbol}
+                        {c.partySymbol}
                       </div>
                       <div className="w-24 bg-gray-100 dark:bg-gray-900 border-l border-gray-300 dark:border-gray-700 flex items-center justify-center">
                         <button
@@ -136,7 +138,7 @@ export default function SimulatorPage() {
                 </div>
                 <CardContent className="p-8 flex flex-col items-center">
                   <div className="w-full bg-white text-black p-6 font-mono text-center border-2 border-dashed border-gray-300 mb-8 shadow-inner">
-                    <div className="text-4xl mb-4">{mockCandidates.find(c => c.id === selectedCandidate)?.symbol}</div>
+                    <div className="text-4xl mb-4">{mockCandidates.find(c => c.id === selectedCandidate)?.partySymbol}</div>
                     <div className="font-bold text-xl mb-1">{mockCandidates.find(c => c.id === selectedCandidate)?.name}</div>
                     <div className="text-sm">{mockCandidates.find(c => c.id === selectedCandidate)?.party}</div>
                   </div>

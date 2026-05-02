@@ -1,0 +1,139 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --color-bg: 250 251 255;
+    --color-surface: 255 255 255;
+    --color-primary: 79 108 255;
+    --color-primary-light: 147 166 255;
+    --color-accent: 99 226 184;
+    --color-text: 30 41 59;
+    --color-text-secondary: 100 116 139;
+    --color-border: 226 232 240;
+  }
+
+  .dark {
+    --color-bg: 10 10 20;
+    --color-surface: 20 20 35;
+    --color-primary: 99 128 255;
+    --color-primary-light: 147 166 255;
+    --color-accent: 99 226 184;
+    --color-text: 226 232 240;
+    --color-text-secondary: 148 163 184;
+    --color-border: 45 50 70;
+  }
+
+  * {
+    @apply border-gray-200 dark:border-gray-800;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 dark:from-gray-950 dark:via-gray-950 dark:to-gray-900 text-gray-900 dark:text-gray-100 antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  ::selection {
+    @apply bg-blue-500/20 text-blue-900 dark:text-blue-100;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border border-white/20 dark:border-gray-700/30;
+  }
+
+  .glass-strong {
+    @apply bg-white/80 dark:bg-gray-900/80 backdrop-blur-2xl border border-white/30 dark:border-gray-700/40;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent;
+  }
+
+  .gradient-text-warm {
+    @apply bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 bg-clip-text text-transparent;
+  }
+
+  .card-shadow {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 6px 24px rgba(0, 0, 0, 0.03);
+  }
+
+  .card-shadow-hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06), 0 20px 50px rgba(0, 0, 0, 0.06);
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-float-delayed {
+    animation: float 6s ease-in-out 2s infinite;
+  }
+
+  .animate-pulse-soft {
+    animation: pulse-soft 3s ease-in-out infinite;
+  }
+
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradient-shift 8s ease infinite;
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2s linear infinite;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    background-size: 200% 100%;
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 dark:bg-gray-700 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400 dark:bg-gray-600;
+}
+
+/* Toast customization */
+.toast-custom {
+  @apply rounded-2xl shadow-xl;
+}

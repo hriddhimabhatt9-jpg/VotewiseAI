@@ -8,36 +8,40 @@ import {
   signInWithPopup,
   signOut,
   updateProfile,
+  User as FirebaseUser
 } from "firebase/auth";
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
-import { auth, db, googleProvider } from "@/lib/firebase";
+import { auth, db, googleProvider, isDemoMode } from "@/lib/firebase";
 import { useAuthStore } from "@/store";
 import { UserProfile } from "@/types";
 import toast from "react-hot-toast";
 
-const DEFAULT_PROFILE: Omit<UserProfile, "uid" | "email" | "fullName" | "photoURL"> = {
-  dob: "",
-  mobile: "",
-  address: "",
-  constituency: "",
-  voterId: "",
-  isRegistered: false,
-  interests: [],
-  language: "en",
-  accessibilityNeeds: "",
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
+const DEFAULT_PROFILE: Partial<UserProfile> = {
   xp: 0,
   level: 1,
   badges: [],
   quizScore: 0,
+  isRegistered: false,
 };
 
 export function useAuth() {
   const { user, loading, setUser, setLoading } = useAuthStore();
 
   useEffect(() => {
+    // Safety timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      if (loading) {
+        setLoading(false);
+      }
+    }, 2000);
+
+    if (isDemoMode) {
+      setLoading(false);
+      return () => clearTimeout(timeout);
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      clearTimeout(timeout);
       if (firebaseUser) {
         try {
           const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
@@ -52,22 +56,19 @@ export function useAuth() {
               photoURL: firebaseUser.photoURL || "",
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
-            };
+            } as UserProfile;
             await setDoc(doc(db, "users", firebaseUser.uid), newProfile);
             setUser(newProfile);
           }
-        } catch {
-          // Firebase not configured - use local profile
-          const localProfile: UserProfile = {
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
+          setUser({
             ...DEFAULT_PROFILE,
             uid: firebaseUser.uid,
             email: firebaseUser.email || "",
             fullName: firebaseUser.displayName || "",
             photoURL: firebaseUser.photoURL || "",
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          };
-          setUser(localProfile);
+          } as UserProfile);
         }
       } else {
         setUser(null);
@@ -75,68 +76,92 @@ export function useAuth() {
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      clearTimeout(timeout);
+    };
   }, [setUser, setLoading]);
 
   const login = async (email: string, password: string) => {
+    if (isDemoMode) {
+      const demoUser: UserProfile = {
+        ...DEFAULT_PROFILE,
+        uid: "demo-user",
+        email,
+        fullName: "Demo Voter",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      } as UserProfile;
+      setUser(demoUser);
+      toast.success("Welcome back (Demo Mode)! 🎉");
+      return;
+    }
     try {
       setLoading(true);
       await signInWithEmailAndPassword(auth, email, password);
       toast.success("Welcome back! 🎉");
-    } catch (error: unknown) {
-      console.warn("Firebase Auth failed, using mock auth", error);
-      const mockProfile: UserProfile = {
-        ...DEFAULT_PROFILE,
-        uid: "mock-user-123",
-        email: email,
-        fullName: "Demo User",
-        photoURL: "",
-      };
-      setUser(mockProfile);
-      toast.success("Welcome back (Mock Mode)! 🎉");
+    } catch (error: any) {
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const signup = async (email: string, password: string, name: string) => {
+  const signup = async (email: string, password: string, fullName: string) => {
+    if (isDemoMode) {
+      const demoUser: UserProfile = {
+        ...DEFAULT_PROFILE,
+        uid: "demo-user",
+        email,
+        fullName,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      } as UserProfile;
+      setUser(demoUser);
+      toast.success("Account created (Demo Mode)! 🎊");
+      return;
+    }
     try {
       setLoading(true);
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
-      await updateProfile(cred.user, { displayName: name });
-      toast.success("Account created successfully! 🎊");
-    } catch (error: unknown) {
-      console.warn("Firebase Auth failed, using mock auth", error);
-      const mockProfile: UserProfile = {
+      const { user: firebaseUser } = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(firebaseUser, { displayName: fullName });
+      const newProfile: UserProfile = {
         ...DEFAULT_PROFILE,
-        uid: "mock-user-123",
-        email: email,
-        fullName: name,
-        photoURL: "",
-      };
-      setUser(mockProfile);
-      toast.success("Account created successfully (Mock Mode)! 🎊");
+        uid: firebaseUser.uid,
+        email: firebaseUser.email || "",
+        fullName,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      } as UserProfile;
+      await setDoc(doc(db, "users", firebaseUser.uid), newProfile);
+      setUser(newProfile);
+      toast.success("Account created successfully! 🎊");
+    } catch (error: any) {
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }
   };
 
   const loginWithGoogle = async () => {
+    if (isDemoMode) {
+      const demoUser: UserProfile = {
+        ...DEFAULT_PROFILE,
+        uid: "google-demo",
+        email: "demo@gmail.com",
+        fullName: "Google Demo User",
+        photoURL: "",
+      } as UserProfile;
+      setUser(demoUser);
+      toast.success("Signed in with Google (Demo Mode)! 🎉");
+      return;
+    }
     try {
       setLoading(true);
       await signInWithPopup(auth, googleProvider);
       toast.success("Signed in with Google! 🎉");
-    } catch (error: unknown) {
-      console.warn("Firebase Auth failed, using mock auth", error);
-      const mockProfile: UserProfile = {
-        ...DEFAULT_PROFILE,
-        uid: "mock-google-123",
-        email: "demo@gmail.com",
-        fullName: "Google Demo User",
-        photoURL: "",
-      };
-      setUser(mockProfile);
-      toast.success("Signed in with Google (Mock Mode)! 🎉");
+    } catch (error: any) {
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }
@@ -144,12 +169,13 @@ export function useAuth() {
 
   const logout = async () => {
     try {
-      await signOut(auth);
+      if (!isDemoMode) {
+        await signOut(auth);
+      }
       setUser(null);
       toast.success("Logged out successfully");
-    } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "Logout failed";
-      toast.error(msg);
+    } catch (error: any) {
+      toast.error(error.message);
     }
   };
 

@@ -46,8 +46,7 @@ USER nextjs
 
 EXPOSE 3000
 
-ENV PORT 3000
-# set hostname to localhost
+# set hostname to 0.0.0.0 to listen on all interfaces
 ENV HOSTNAME "0.0.0.0"
 
 CMD ["node", "server.js"]

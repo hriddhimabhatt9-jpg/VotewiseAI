@@ -48,6 +48,11 @@ export function Navbar() {
   const { lang, toggleLang } = useLangStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
 
@@ -57,7 +62,7 @@ export function Navbar() {
   const isLanding = pathname === "/";
   const isAuthPage = pathname === "/login" || pathname === "/signup";
 
-  if (isAuthPage) return null;
+  if (!mounted || isAuthPage) return null;
 
   return (
     <>

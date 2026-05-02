@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import { useLangStore } from "@/store";
 import { translations } from "@/lib/data";
+import LiveBoothMap from "@/components/maps/LiveBoothMap";
 
 export default function PlannerPage() {
   const { lang } = useLangStore();
@@ -126,67 +127,18 @@ export default function PlannerPage() {
         {/* Map Visualization */}
         <div className="lg:col-span-2 relative">
           <Card glass className="h-full min-h-[600px] overflow-hidden border-2 border-white dark:border-gray-800 shadow-2xl">
-            {/* Mock Map Background */}
-            <div className="absolute inset-0 bg-gray-100 dark:bg-gray-950 flex items-center justify-center">
-              <div className="w-full h-full relative overflow-hidden">
-                {/* Simplified Map UI */}
-                <div className="absolute inset-0 opacity-40">
-                  <div className="absolute top-1/4 left-1/4 w-[1px] h-full bg-gray-300 dark:bg-gray-700 rotate-12" />
-                  <div className="absolute top-1/2 left-0 w-full h-[1px] bg-gray-300 dark:bg-gray-700 -rotate-6" />
-                  <div className="absolute top-0 right-1/3 w-[1px] h-full bg-gray-300 dark:bg-gray-700" />
-                </div>
-
-                {/* Path Animation */}
-                <svg className="absolute inset-0 w-full h-full">
-                  <motion.path
-                    d="M 100 500 Q 300 400 400 200"
-                    fill="none"
-                    stroke="#3b82f6"
-                    strokeWidth="4"
-                    strokeDasharray="10 10"
-                    initial={{ strokeDashoffset: 100 }}
-                    animate={{ strokeDashoffset: 0 }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                  />
-                </svg>
-
-                {/* Markers */}
-                <motion.div 
-                  className="absolute bottom-[100px] left-[100px] flex flex-col items-center"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                >
-                  <div className="bg-white dark:bg-gray-900 px-3 py-1.5 rounded-full text-[10px] font-bold shadow-lg mb-1 border dark:border-gray-800">Your Location</div>
-                  <div className="w-4 h-4 bg-blue-600 rounded-full border-2 border-white shadow-xl ring-4 ring-blue-500/20" />
-                </motion.div>
-
-                <motion.div 
-                  className="absolute top-[200px] right-[40%] flex flex-col items-center"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.5 }}
-                >
-                  <div className="bg-emerald-600 text-white px-3 py-1.5 rounded-full text-[10px] font-bold shadow-lg mb-1">Polling Booth KV No.1</div>
-                  <MapPin className="w-10 h-10 text-emerald-600 drop-shadow-xl" />
-                </motion.div>
-              </div>
-            </div>
-
-            {/* Map Overlay Controls */}
-            <div className="absolute top-4 right-4 flex flex-col gap-2">
-              <button className="w-10 h-10 rounded-xl bg-white dark:bg-gray-900 shadow-xl border dark:border-gray-800 flex items-center justify-center text-gray-500 hover:text-blue-500">
-                <Info className="w-5 h-5" />
-              </button>
-            </div>
+            <LiveBoothMap />
             
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-sm">
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-sm pointer-events-auto">
               <Card glass className="bg-white/90 dark:bg-gray-900/90 border-blue-500/20">
                 <CardContent className="p-4 flex items-center justify-between">
                   <div>
                     <p className="text-[10px] uppercase font-bold text-gray-500 mb-1">Estimated Arrival</p>
                     <p className="text-xl font-black">12:45 PM <span className="text-sm font-medium text-emerald-500">(On Time)</span></p>
                   </div>
-                  <Button variant="primary" size="sm">Go Live</Button>
+                  <Button variant="primary" size="sm" onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=28.5634,77.1724`, '_blank')}>
+                    Go Live
+                  </Button>
                 </CardContent>
               </Card>
             </div>

@@ -1,7 +1,16 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { APIProvider, Map, Marker, InfoWindow, useMap } from '@vis.gl/react-google-maps';
+import React, { useState, useEffect, useCallback } from 'react';
+import { 
+  APIProvider, 
+  Map, 
+  Marker, 
+  InfoWindow, 
+  useMap, 
+  useMapsLibrary,
+  ControlPosition,
+  MapControl
+} from '@vis.gl/react-google-maps';
 
 interface Booth {
   id: string;
@@ -18,7 +27,12 @@ const MOCK_BOOTHS: Booth[] = [
   { id: '3', name: 'Community Center', lat: 28.5589, lng: 77.1656, address: 'Sector 9, RK Puram, New Delhi', waitLevel: 'high' },
 ];
 
-export default function LiveBoothMap() {
+interface LiveBoothMapProps {
+  transportMode?: 'DRIVING' | 'WALKING' | 'TRANSIT';
+  destination?: { lat: number; lng: number } | null;
+}
+
+export default function LiveBoothMap({ transportMode = 'DRIVING', destination = null }: LiveBoothMapProps) {
   const [apiKey, setApiKey] = useState<string>(process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '');
   const [selectedBooth, setSelectedBooth] = useState<Booth | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -26,7 +40,7 @@ export default function LiveBoothMap() {
 
   useEffect(() => {
     async function fetchConfig() {
-      if (apiKey) return;
+      if (apiKey && apiKey !== 'demo-maps-key') return;
       try {
         const res = await fetch('/api/config');
         const data = await res.json();
@@ -53,7 +67,6 @@ export default function LiveBoothMap() {
           });
         },
         () => {
-          // Default to Delhi center if denied
           setUserLocation({ lat: 28.5634, lng: 77.1724 });
         }
       );
@@ -68,12 +81,12 @@ export default function LiveBoothMap() {
     );
   }
 
-  if (!apiKey) {
+  if (!apiKey || apiKey === 'demo-maps-key') {
     return (
       <div className="w-full h-full bg-gray-100 dark:bg-gray-950 flex flex-col items-center justify-center p-8 text-center">
-        <p className="text-gray-500 mb-4">Google Maps API key not found.</p>
+        <p className="text-gray-500 mb-4">Google Maps API key not found or invalid.</p>
         <div className="p-4 border-2 border-dashed border-gray-300 rounded-xl max-w-xs">
-          <p className="text-xs text-gray-400">Please add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to your environment variables to enable the live map.</p>
+          <p className="text-xs text-gray-400">Please add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to your environment variables.</p>
         </div>
       </div>
     );
@@ -81,16 +94,22 @@ export default function LiveBoothMap() {
 
   return (
     <APIProvider apiKey={apiKey}>
-      <div className="w-full h-full rounded-2xl overflow-hidden border dark:border-gray-800">
+      <div className="w-full h-full relative rounded-2xl overflow-hidden border dark:border-gray-800">
         <Map
           defaultCenter={userLocation || { lat: 28.5634, lng: 77.1724 }}
-          defaultZoom={14}
+          defaultZoom={13}
           gestureHandling={'greedy'}
           disableDefaultUI={false}
-          mapId="bf51a910020fa25a" // Modern map style
+          mapId="bf51a910020fa25a"
           className="w-full h-full"
         >
-          {userLocation && (
+          <Directions 
+            origin={userLocation} 
+            destination={destination || (selectedBooth ? { lat: selectedBooth.lat, lng: selectedBooth.lng } : null)}
+            travelMode={transportMode}
+          />
+
+          {userLocation && !destination && (
             <Marker
               position={userLocation}
               title="Your Location"
@@ -98,7 +117,7 @@ export default function LiveBoothMap() {
             />
           )}
 
-          {MOCK_BOOTHS.map((booth) => (
+          {!destination && MOCK_BOOTHS.map((booth) => (
             <Marker
               key={booth.id}
               position={{ lat: booth.lat, lng: booth.lng }}
@@ -114,7 +133,7 @@ export default function LiveBoothMap() {
             />
           ))}
 
-          {selectedBooth && (
+          {selectedBooth && !destination && (
             <InfoWindow
               position={{ lat: selectedBooth.lat, lng: selectedBooth.lng }}
               onCloseClick={() => setSelectedBooth(null)}
@@ -138,4 +157,46 @@ export default function LiveBoothMap() {
       </div>
     </APIProvider>
   );
+}
+
+function Directions({ origin, destination, travelMode }: { 
+  origin: { lat: number; lng: number } | null, 
+  destination: { lat: number; lng: number } | null,
+  travelMode: 'DRIVING' | 'WALKING' | 'TRANSIT'
+}) {
+  const map = useMap();
+  const routesLibrary = useMapsLibrary('routes');
+  const [directionsService, setDirectionsService] = useState<google.maps.DirectionsService>();
+  const [directionsRenderer, setDirectionsRenderer] = useState<google.maps.DirectionsRenderer>();
+  const [routes, setRoutes] = useState<google.maps.DirectionsRoute[]>([]);
+
+  useEffect(() => {
+    if (!routesLibrary || !map) return;
+    setDirectionsService(new routesLibrary.DirectionsService());
+    setDirectionsRenderer(new routesLibrary.DirectionsRenderer({ map }));
+  }, [routesLibrary, map]);
+
+  useEffect(() => {
+    if (!directionsService || !directionsRenderer || !origin || !destination) {
+      if (directionsRenderer) directionsRenderer.setDirections({ routes: [] });
+      return;
+    }
+
+    directionsService.route(
+      {
+        origin: origin,
+        destination: destination,
+        travelMode: google.maps.TravelMode[travelMode],
+        provideRouteAlternatives: true
+      },
+      (result, status) => {
+        if (status === google.maps.DirectionsStatus.OK && result) {
+          directionsRenderer.setDirections(result);
+          setRoutes(result.routes);
+        }
+      }
+    );
+  }, [directionsService, directionsRenderer, origin, destination, travelMode]);
+
+  return null;
 }

@@ -19,9 +19,29 @@ const MOCK_BOOTHS: Booth[] = [
 ];
 
 export default function LiveBoothMap() {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+  const [apiKey, setApiKey] = useState<string>(process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '');
   const [selectedBooth, setSelectedBooth] = useState<Booth | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [isLoading, setIsLoading] = useState(!apiKey);
+
+  useEffect(() => {
+    async function fetchConfig() {
+      if (apiKey) return;
+      try {
+        const res = await fetch('/api/config');
+        const data = await res.json();
+        if (data.apiKey) {
+          setApiKey(data.apiKey);
+        }
+      } catch (err) {
+        console.error('Failed to fetch map config:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchConfig();
+  }, [apiKey]);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -39,6 +59,14 @@ export default function LiveBoothMap() {
       );
     }
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="w-full h-full bg-gray-100 dark:bg-gray-950 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   if (!apiKey) {
     return (

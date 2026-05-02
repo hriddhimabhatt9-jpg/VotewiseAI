@@ -19,7 +19,7 @@ const MOCK_BOOTHS: Booth[] = [
 ];
 
 export default function LiveBoothMap() {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyCmIRb91zrRaKbolwBzohDpZfWrwXU2Sgw';
   const [selectedBooth, setSelectedBooth] = useState<Booth | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 

@@ -29,6 +29,7 @@ const customJestConfig = {
     '!src/**/performance.tsx',
     '!src/**/accessibility.tsx',
     '!src/lib/firebase.ts',
+    '!src/lib/apiConfig.ts',
   ],
   coveragePathIgnorePatterns: [
     '/node_modules/',

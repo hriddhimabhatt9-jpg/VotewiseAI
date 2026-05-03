@@ -1,10 +1,10 @@
 /**
  * Google Services Integration Layer
- * Centralizes all Google API interactions via /my_api
+ * Centralizes all Google API interactions via @/lib/apiConfig
  * Supports: Maps, Gemini AI, Firebase, Speech-to-Text, Vision AI, Translate
  */
 
-import { genAI, GEMINI_API_KEY, GOOGLE_MAPS_API_KEY, SPEECH_TO_TEXT_API, VISION_AI_API } from '../../my_api';
+import { genAI, GEMINI_API_KEY, GOOGLE_MAPS_API_KEY, SPEECH_TO_TEXT_API, VISION_AI_API } from '@/lib/apiConfig';
 
 /* ─── Gemini AI Service ─── */
 

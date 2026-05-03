@@ -18,10 +18,9 @@ COPY . .
 # Next.js telemetry disabled
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Next.js auto-loads .env.production during build
-# NEXT_PUBLIC_ vars are baked into the client bundle at build time
+# Next.js auto-loads .env.production during `npm run build`
+# NEXT_PUBLIC_ vars get baked into the client bundle at build time
 # Server-only vars (GEMINI_API, etc.) are injected at runtime via Cloud Run env vars
-
 RUN npm run build
 
 # Production image
@@ -43,9 +42,6 @@ RUN chown nextjs:nodejs .next
 # Leverage output traces to reduce image size
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-# Copy my_api folder for runtime API access
-COPY --from=builder --chown=nextjs:nodejs /app/my_api ./my_api
 
 USER nextjs
 

@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server'
-import { genAI, GEMINI_API_KEY } from '../../../../my_api'
+import { genAI, GEMINI_API_KEY } from '@/lib/apiConfig'
 import { sanitizeInput, validateInput } from '@/lib/validation'
 import { getClientIP, checkRateLimit } from '@/lib/security'
 

@@ -4,7 +4,7 @@
 // Global flag to trigger error in mock
 (global as any).__mockOpenAIError = false;
 
-jest.mock('../../../../my_api', () => {
+jest.mock('@/lib/apiConfig', () => {
   const mockSendMessage = jest.fn().mockImplementation(() => {
     if ((global as any).__mockOpenAIError) {
       return Promise.reject(new Error('API Error'));

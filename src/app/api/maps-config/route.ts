@@ -1,10 +1,10 @@
 /**
  * API Route: Get Maps API Key
- * Provides Google Maps API key securely to frontend via /my_api
+ * Provides Google Maps API key securely to frontend
  */
 
 import { NextResponse } from 'next/server'
-import { GOOGLE_MAPS_API_KEY } from '../../../../my_api'
+import { GOOGLE_MAPS_API_KEY } from '@/lib/apiConfig'
 
 export async function GET() {
   try {

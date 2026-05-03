@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { GOOGLE_MAPS_API_KEY } from '../../../../my_api';
+import { GOOGLE_MAPS_API_KEY } from '@/lib/apiConfig';
 
 export async function GET() {
   const apiKey = GOOGLE_MAPS_API_KEY;

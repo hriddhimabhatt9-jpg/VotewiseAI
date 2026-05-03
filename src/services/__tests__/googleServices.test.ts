@@ -2,8 +2,8 @@
  * Tests for Google Services integration layer
  */
 
-// Mock the my_api module before imports
-jest.mock('../../../my_api', () => ({
+// Mock the apiConfig module before imports
+jest.mock('@/lib/apiConfig', () => ({
   genAI: {
     getGenerativeModel: jest.fn(() => ({
       startChat: jest.fn(() => ({

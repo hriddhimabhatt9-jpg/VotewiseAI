@@ -1,11 +1,7 @@
 import { NextResponse, NextRequest } from 'next/server'
-import OpenAI from 'openai'
+import { genAI, GEMINI_API_KEY } from '../../../../my_api'
 import { sanitizeInput, validateInput } from '@/lib/validation'
 import { getClientIP, checkRateLimit } from '@/lib/security'
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || 'dummy_key',
-})
 
 const SYSTEM_PROMPT = `You are VoteWise AI+, a highly intelligent voter education and assistance platform for Indian elections. 
 Your goal is to provide accurate, unbiased, and helpful information about:
@@ -55,25 +51,25 @@ export async function POST(req: NextRequest) {
       }
 
       return {
-        role: msg.role,
-        content: sanitized,
+        role: msg.role === 'assistant' ? 'model' : 'user', // Gemini uses 'model' instead of 'assistant'
+        parts: [{ text: sanitized }],
       }
     })
 
     // Check message length
-    if (validatedMessages.some((msg: any) => msg.content.length > 2000)) {
+    if (validatedMessages.some((msg: any) => msg.parts[0].text.length > 2000)) {
       return NextResponse.json(
         { error: 'Message exceeds maximum length' },
         { status: 400 }
       )
     }
 
-    if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'dummy_key') {
+    if (!GEMINI_API_KEY || GEMINI_API_KEY === 'dummy_key') {
       // Return a realistic mock response if API key is missing
       const lastUserMessage =
-        validatedMessages[validatedMessages.length - 1]?.content?.toLowerCase() || ''
+        validatedMessages[validatedMessages.length - 1]?.parts[0].text?.toLowerCase() || ''
       let mockReply =
-        "I'm currently in demo mode. To get real-time AI responses, please configure your OpenAI API key. However, based on my knowledge base: "
+        "I'm currently in demo mode. To get real-time AI responses, please configure your Gemini API key. However, based on my knowledge base: "
 
       if (lastUserMessage.includes('register')) {
         mockReply +=
@@ -95,17 +91,22 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4-turbo-preview',
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        ...validatedMessages,
-      ],
-      temperature: 0.7,
-      max_tokens: 1000,
-    })
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash", systemInstruction: SYSTEM_PROMPT });
+    
+    // We pass history (all but last) to startChat and then sendMessage with the last one
+    const history = validatedMessages.slice(0, -1);
+    const lastMessage = validatedMessages[validatedMessages.length - 1].parts[0].text;
 
-    return NextResponse.json(response.choices[0].message)
+    const chat = model.startChat({
+      history: history,
+    });
+
+    const result = await chat.sendMessage(lastMessage);
+
+    return NextResponse.json({
+      role: 'assistant',
+      content: result.response.text()
+    })
   } catch (error: any) {
     // Log error details (in production, send to monitoring service)
     console.error('Chat API Error:', {

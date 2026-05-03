@@ -23,6 +23,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'maps.gstatic.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'ui-avatars.com',
+      },
     ],
   },
 

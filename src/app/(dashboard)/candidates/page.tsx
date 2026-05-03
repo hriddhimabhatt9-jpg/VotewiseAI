@@ -7,6 +7,7 @@ import { Card, CardHeader, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import Image from "next/image";
 
 import { candidatesData, translations } from "@/lib/data";
 import { useLangStore } from "@/store";
@@ -53,11 +54,19 @@ export default function CandidatesPage() {
                 <div className="flex flex-col sm:flex-row gap-6">
                   {/* Candidate Header */}
                   <div className="flex-shrink-0 flex flex-col items-center gap-3">
-                    <img 
-                      src={candidate.image} 
-                      alt={candidate.name} 
-                      className="w-24 h-24 rounded-2xl object-cover shadow-md border-2 border-white dark:border-gray-800"
-                    />
+                    <div className="relative w-24 h-24 rounded-2xl shadow-md border-2 border-white dark:border-gray-800 overflow-hidden bg-gray-100">
+                      <Image 
+                        src={candidate.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(candidate.name)}&background=random`} 
+                        alt={candidate.name}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 96px, 96px"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(candidate.name)}&background=random`;
+                        }}
+                      />
+                    </div>
                     <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 text-2xl shadow-inner">
                       {candidate.partySymbol}
                     </div>

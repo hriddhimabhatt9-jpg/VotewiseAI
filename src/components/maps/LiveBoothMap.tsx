@@ -12,6 +12,7 @@ import {
   MapControl
 } from '@vis.gl/react-google-maps';
 import { candidatesData } from '@/lib/data';
+import Image from 'next/image';
 
 interface Booth {
   id: string;
@@ -160,7 +161,19 @@ export default function LiveBoothMap({ transportMode = 'DRIVING', destination = 
                     <div className="mt-2 pt-2 border-t border-gray-200">
                       <p className="text-[10px] font-bold text-gray-500 uppercase mb-1">Local Candidate</p>
                       <div className="flex items-center gap-2">
-                        <img src={candidate.image} alt={candidate.name} className="w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm" />
+                        <div className="relative w-10 h-10 rounded-full overflow-hidden border border-gray-300 shadow-sm bg-gray-100 flex-shrink-0">
+                          <Image
+                            src={candidate.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(candidate.name)}&background=random`}
+                            alt={candidate.name}
+                            fill
+                            className="object-cover"
+                            sizes="40px"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(candidate.name)}&background=random`;
+                            }}
+                          />
+                        </div>
                         <div>
                           <p className="text-sm font-bold text-gray-800">{candidate.name}</p>
                           <p className="text-[10px] text-gray-600 font-medium">{candidate.party} {candidate.partySymbol}</p>

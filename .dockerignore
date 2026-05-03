@@ -11,3 +11,4 @@ coverage
 deploy_debug.log
 .vscode
 .idea
+my_api_keys.txt

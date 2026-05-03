@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import { useLangStore } from "@/store";
 import { translations } from "@/lib/data";
-import LiveBoothMap from "@/components/maps/LiveBoothMap";
+import MapView from "@/components/maps/MapView";
 
 // Const types for efficiency
 type TransportMode = 'DRIVING' | 'WALKING' | 'TRANSIT';
@@ -149,10 +149,7 @@ export default function PlannerPage() {
         {/* Map Visualization */}
         <div className="lg:col-span-2 relative">
           <Card glass className="h-full min-h-[600px] overflow-hidden border-2 border-white dark:border-gray-800 shadow-2xl">
-            <LiveBoothMap 
-              transportMode={activeTransport} 
-              destination={isNavigating ? BOOTH_LOCATION : null} 
-            />
+            <MapView height="600px" />
             
             {isNavigating && (
               <motion.div 

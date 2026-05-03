@@ -1,33 +1,49 @@
 /**
  * @jest-environment node
  */
-import { POST } from '../chat/route'
-import { NextResponse } from 'next/server'
+// Global flag to trigger error in mock
+(global as any).__mockOpenAIError = false;
 
 jest.mock('openai', () => {
-  return {
-    default: jest.fn().mockImplementation(() => ({
+  const mockCreate = jest.fn().mockImplementation(() => {
+    if ((global as any).__mockOpenAIError) {
+      return Promise.reject(new Error('API Error'));
+    }
+    return Promise.resolve({
+      choices: [
+        {
+          message: {
+            role: 'assistant',
+            content: 'This is a mock response',
+          },
+        },
+      ],
+    });
+  });
+
+  function MockOpenAI() {
+    return {
       chat: {
         completions: {
-          create: jest.fn().mockResolvedValue({
-            choices: [
-              {
-                message: {
-                  role: 'assistant',
-                  content: 'This is a mock response',
-                },
-              },
-            ],
-          }),
+          create: mockCreate,
         },
       },
-    })),
+    };
   }
-})
+
+  return {
+    __esModule: true,
+    default: MockOpenAI,
+  };
+});
+
+import { POST } from '../chat/route';
+import { NextResponse } from 'next/server';
 
 describe('/api/chat POST', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    ;(global as any).__mockOpenAIError = false;
   })
 
   it('should return error for empty messages', async () => {
@@ -142,18 +158,7 @@ describe('/api/chat POST', () => {
   it('should return server error on API failure', async () => {
     process.env.OPENAI_API_KEY = 'test-key'
 
-    // Mock the OpenAI module to throw an error
-    jest.doMock('openai', () => {
-      return {
-        default: jest.fn().mockImplementation(() => ({
-          chat: {
-            completions: {
-              create: jest.fn().mockRejectedValueOnce(new Error('API Error')),
-            },
-          },
-        })),
-      }
-    })
+    ;(global as any).__mockOpenAIError = true;
 
     const request = new Request('http://localhost:3000/api/chat', {
       method: 'POST',

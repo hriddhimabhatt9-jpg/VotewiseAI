@@ -1,5 +1,10 @@
 import '@testing-library/jest-dom'
 
+// Mock scrollIntoView (not implemented in jsdom, not available in node)
+if (typeof Element !== 'undefined') {
+  Element.prototype.scrollIntoView = jest.fn();
+}
+
 // Mock Next.js router
 jest.mock('next/router', () => ({
   useRouter() {

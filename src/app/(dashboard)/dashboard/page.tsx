@@ -10,6 +10,9 @@ import { Card, CardHeader, CardContent } from "@/components/ui/Card";
 import { Badge, ProgressBar, ScoreRing } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { CheckCircle2, ChevronRight, AlertCircle, Calendar, MapPin, Trophy } from "lucide-react";
+import dynamic from "next/dynamic";
+
+const MapView = dynamic(() => import("@/components/maps/MapView"), { ssr: false });
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -139,6 +142,29 @@ export default function DashboardPage() {
           </Card>
         </motion.div>
       </div>
+
+      {/* Polling Booth Map */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="mt-8"
+      >
+        <Card glass>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-blue-500" />
+              <h2 className="text-lg font-semibold">{lang === "hi" ? "मतदान केंद्र" : "Nearby Polling Booths"}</h2>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => router.push("/planner")}>
+              {lang === "hi" ? "पूर्ण मानचित्र" : "Full Map"} <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <MapView height="350px" />
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 }

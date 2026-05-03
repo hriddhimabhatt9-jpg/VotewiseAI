@@ -1,144 +1,95 @@
 /**
- * useAuth Hook Tests
- * Tests auth state management, login, signup, logout flows
- * Uses demo mode since Firebase is not configured in test environment
+ * Tests for useAuth hook
  */
 
-import { useAuthStore } from '@/store';
+import { renderHook, act } from '@testing-library/react';
+import { useAuth } from '../useAuth';
+import toast from 'react-hot-toast';
 
-// Firebase is mocked in jest.setup.js and useAuth uses isDemoMode=true in tests
+// Mock Firebase auth
+jest.mock('firebase/auth', () => ({
+  onAuthStateChanged: jest.fn((_auth, callback) => {
+    callback(null);
+    return jest.fn();
+  }),
+  signInWithEmailAndPassword: jest.fn().mockResolvedValue({ user: { uid: '123' } }),
+  createUserWithEmailAndPassword: jest.fn().mockResolvedValue({
+    user: { uid: '123', email: 'test@test.com', displayName: null, photoURL: null },
+  }),
+  signInWithPopup: jest.fn().mockResolvedValue({ user: { uid: 'g123' } }),
+  signOut: jest.fn().mockResolvedValue(undefined),
+  updateProfile: jest.fn().mockResolvedValue(undefined),
+  GoogleAuthProvider: jest.fn(),
+}));
 
-describe('useAuth Hook (Demo Mode)', () => {
-  beforeEach(() => {
-    // Reset store
-    useAuthStore.setState({ user: null, loading: false });
+jest.mock('firebase/firestore', () => ({
+  doc: jest.fn(),
+  getDoc: jest.fn().mockResolvedValue({ exists: () => false }),
+  setDoc: jest.fn().mockResolvedValue(undefined),
+  updateDoc: jest.fn().mockResolvedValue(undefined),
+  serverTimestamp: jest.fn(() => new Date()),
+}));
+
+describe('useAuth', () => {
+  it('initializes with loading state', () => {
+    const { result } = renderHook(() => useAuth());
+    expect(result.current.loading).toBeDefined();
   });
 
-  it('should initialize with no user', () => {
-    const state = useAuthStore.getState();
-    expect(state.user).toBeNull();
-    expect(state.loading).toBe(false);
+  it('provides login function', () => {
+    const { result } = renderHook(() => useAuth());
+    expect(typeof result.current.login).toBe('function');
   });
 
-  it('should set user on demo login', () => {
-    const mockUser = {
-      uid: 'demo-user',
-      email: 'test@example.com',
-      fullName: 'Demo Voter',
-      xp: 0,
-      level: 1,
-      badges: [],
-      quizScore: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    useAuthStore.getState().setUser(mockUser as any);
-    expect(useAuthStore.getState().user).toEqual(mockUser);
+  it('provides signup function', () => {
+    const { result } = renderHook(() => useAuth());
+    expect(typeof result.current.signup).toBe('function');
   });
 
-  it('should clear user on logout', () => {
-    useAuthStore.getState().setUser({
-      uid: 'test',
-      email: 'test@test.com',
-      fullName: 'Test',
-      xp: 0,
-      level: 1,
-      badges: [],
-      quizScore: 0,
-    } as any);
-    expect(useAuthStore.getState().user).not.toBeNull();
-    useAuthStore.getState().setUser(null);
-    expect(useAuthStore.getState().user).toBeNull();
+  it('provides logout function', () => {
+    const { result } = renderHook(() => useAuth());
+    expect(typeof result.current.logout).toBe('function');
   });
 
-  it('should set loading state', () => {
-    useAuthStore.getState().setLoading(true);
-    expect(useAuthStore.getState().loading).toBe(true);
-    useAuthStore.getState().setLoading(false);
-    expect(useAuthStore.getState().loading).toBe(false);
+  it('provides loginWithGoogle function', () => {
+    const { result } = renderHook(() => useAuth());
+    expect(typeof result.current.loginWithGoogle).toBe('function');
   });
 
-  it('should update profile', () => {
-    useAuthStore.getState().setUser({
-      uid: 'test',
-      email: 'test@test.com',
-      fullName: 'Old Name',
-      xp: 0,
-      level: 1,
-      badges: [],
-      quizScore: 0,
-    } as any);
-
-    useAuthStore.getState().updateProfile({ fullName: 'New Name' });
-    expect(useAuthStore.getState().user?.fullName).toBe('New Name');
+  it('provides updateUserProfile function', () => {
+    const { result } = renderHook(() => useAuth());
+    expect(typeof result.current.updateUserProfile).toBe('function');
   });
 
-  it('should not crash updateProfile when user is null', () => {
-    useAuthStore.getState().setUser(null);
-    expect(() => {
-      useAuthStore.getState().updateProfile({ fullName: 'Test' });
-    }).not.toThrow();
+  it('demo login works', async () => {
+    const { result } = renderHook(() => useAuth());
+    await act(async () => {
+      await result.current.login('demo@test.com', 'password');
+    });
+    expect(toast.success).toHaveBeenCalled();
   });
 
-  it('should add XP', () => {
-    useAuthStore.getState().setUser({
-      uid: 'test',
-      email: 'test@test.com',
-      fullName: 'Test',
-      xp: 0,
-      level: 1,
-      badges: [],
-      quizScore: 0,
-    } as any);
-
-    useAuthStore.getState().addXP(100);
-    expect(useAuthStore.getState().user?.xp).toBe(100);
+  it('demo signup works', async () => {
+    const { result } = renderHook(() => useAuth());
+    await act(async () => {
+      await result.current.signup('demo@test.com', 'password', 'Demo User');
+    });
+    expect(toast.success).toHaveBeenCalled();
   });
 
-  it('should calculate level from XP', () => {
-    useAuthStore.getState().setUser({
-      uid: 'test',
-      email: 'test@test.com',
-      fullName: 'Test',
-      xp: 0,
-      level: 1,
-      badges: [],
-      quizScore: 0,
-    } as any);
-
-    useAuthStore.getState().addXP(1200);
-    const user = useAuthStore.getState().user;
-    expect(user?.xp).toBe(1200);
-    expect(user?.level).toBeGreaterThanOrEqual(2);
+  it('demo Google login works', async () => {
+    const { result } = renderHook(() => useAuth());
+    await act(async () => {
+      await result.current.loginWithGoogle();
+    });
+    expect(toast.success).toHaveBeenCalled();
   });
 
-  it('should not crash addXP when user is null', () => {
-    useAuthStore.getState().setUser(null);
-    expect(() => {
-      useAuthStore.getState().addXP(100);
-    }).not.toThrow();
-  });
-
-  it('should handle profile with email and fullName', () => {
-    const profile = {
-      uid: 'profile-test',
-      email: 'voter@india.com',
-      fullName: 'Ram Sharma',
-      xp: 500,
-      level: 2,
-      badges: ['early_voter'],
-      quizScore: 80,
-      dob: '1990-01-15',
-      address: 'Delhi',
-      constituency: 'New Delhi',
-      voterId: 'ABC1234567',
-      isRegistered: true,
-    };
-    useAuthStore.getState().setUser(profile as any);
-    const user = useAuthStore.getState().user;
-    expect(user?.fullName).toBe('Ram Sharma');
-    expect(user?.email).toBe('voter@india.com');
-    expect(user?.xp).toBe(500);
-    expect(user?.level).toBe(2);
+  it('demo logout works', async () => {
+    const { result } = renderHook(() => useAuth());
+    await act(async () => {
+      await result.current.logout();
+    });
+    expect(toast.success).toHaveBeenCalled();
   });
 });

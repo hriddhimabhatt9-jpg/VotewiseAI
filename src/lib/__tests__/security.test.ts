@@ -112,4 +112,121 @@ describe('Security Library', () => {
       expect(getClientIP(mockRequest)).toBe('unknown');
     });
   });
+
+  describe('withAuth', () => {
+    let withAuth: any;
+
+    beforeAll(async () => {
+      const mod = await import('../security');
+      withAuth = mod.withAuth;
+    });
+
+    it('should reject request without auth token', async () => {
+      const mockReq = {
+        cookies: { get: () => undefined },
+        headers: { get: () => null },
+      } as any;
+      const handler = jest.fn();
+      const wrapped = withAuth(handler);
+      const result = await wrapped(mockReq);
+      expect(result.status).toBe(401);
+      expect(handler).not.toHaveBeenCalled();
+    });
+
+    it('should allow request with cookie auth token', async () => {
+      const mockReq = {
+        cookies: { get: (name: string) => name === 'auth-token' ? { value: 'Bearer xyz' } : undefined },
+        headers: { get: () => null },
+      } as any;
+      const handler = jest.fn().mockResolvedValue({ status: 200 });
+      const wrapped = withAuth(handler);
+      const result = await wrapped(mockReq);
+      expect(handler).toHaveBeenCalledWith(mockReq);
+      expect(result.status).toBe(200);
+    });
+
+    it('should allow request with authorization header', async () => {
+      const mockReq = {
+        cookies: { get: () => undefined },
+        headers: { get: (name: string) => name === 'authorization' ? 'Bearer abc' : null },
+      } as any;
+      const handler = jest.fn().mockResolvedValue({ status: 200 });
+      const wrapped = withAuth(handler);
+      const result = await wrapped(mockReq);
+      expect(handler).toHaveBeenCalledWith(mockReq);
+    });
+  });
+
+  describe('withCSRF', () => {
+    let withCSRF: any;
+
+    beforeAll(async () => {
+      const mod = await import('../security');
+      withCSRF = mod.withCSRF;
+    });
+
+    it('should reject POST without CSRF token', async () => {
+      const mockReq = {
+        method: 'POST',
+        headers: { get: () => null },
+      } as any;
+      const handler = jest.fn();
+      const wrapped = withCSRF(handler);
+      const result = await wrapped(mockReq);
+      expect(result.status).toBe(403);
+    });
+
+    it('should reject POST with invalid CSRF token', async () => {
+      const mockReq = {
+        method: 'POST',
+        headers: { get: (name: string) => name === 'x-csrf-token' ? 'invalid' : null },
+      } as any;
+      const handler = jest.fn();
+      const wrapped = withCSRF(handler);
+      const result = await wrapped(mockReq);
+      expect(result.status).toBe(403);
+    });
+
+    it('should allow POST with valid CSRF token', async () => {
+      const validToken = 'a'.repeat(64);
+      const mockReq = {
+        method: 'POST',
+        headers: { get: (name: string) => name === 'x-csrf-token' ? validToken : null },
+      } as any;
+      const handler = jest.fn().mockResolvedValue({ status: 200 });
+      const wrapped = withCSRF(handler);
+      const result = await wrapped(mockReq);
+      expect(handler).toHaveBeenCalledWith(mockReq);
+    });
+
+    it('should allow GET request without CSRF token', async () => {
+      const mockReq = {
+        method: 'GET',
+        headers: { get: () => null },
+      } as any;
+      const handler = jest.fn().mockResolvedValue({ status: 200 });
+      const wrapped = withCSRF(handler);
+      await wrapped(mockReq);
+      expect(handler).toHaveBeenCalled();
+    });
+  });
+
+  describe('withRateLimit', () => {
+    let withRateLimit: any;
+
+    beforeAll(async () => {
+      const mod = await import('../security');
+      withRateLimit = mod.withRateLimit;
+    });
+
+    it('should allow requests within limit', async () => {
+      const mockReq = {
+        headers: { get: (name: string) => name === 'x-forwarded-for' ? '1.2.3.4' : null },
+      } as any;
+      const handler = jest.fn().mockResolvedValue({ status: 200 });
+      const wrapped = withRateLimit(handler, 100, 60000);
+      const result = await wrapped(mockReq);
+      expect(handler).toHaveBeenCalled();
+    });
+  });
 });

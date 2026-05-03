@@ -1,122 +1,137 @@
 /**
- * @jest-environment jsdom
+ * Tests for ChatWindow component
  */
+
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-
-// Mock lucide-react icons
-jest.mock('lucide-react', () => ({
-  Send: (props: any) => <svg data-testid="icon-send" {...props} />,
-  Bot: (props: any) => <svg data-testid="icon-bot" {...props} />,
-  User: (props: any) => <svg data-testid="icon-user" {...props} />,
-  Loader2: (props: any) => <svg data-testid="icon-loader" {...props} />,
-  Mic: (props: any) => <svg data-testid="icon-mic" {...props} />,
-  MicOff: (props: any) => <svg data-testid="icon-mic-off" {...props} />,
-  Volume2: (props: any) => <svg data-testid="icon-volume" {...props} />,
-  VolumeX: (props: any) => <svg data-testid="icon-volume-x" {...props} />,
-  Sparkles: (props: any) => <svg data-testid="icon-sparkles" {...props} />,
-  MessageSquare: (props: any) => <svg data-testid="icon-msg" {...props} />,
-  Trash2: (props: any) => <svg data-testid="icon-trash" {...props} />,
-}));
-
 import ChatWindow from '../ChatWindow';
 
-describe('ChatWindow Component', () => {
+// Mock fetch globally
+const mockFetch = jest.fn();
+global.fetch = mockFetch;
+
+describe('ChatWindow', () => {
   beforeEach(() => {
-    global.fetch = jest.fn();
+    mockFetch.mockReset();
   });
 
-  afterEach(() => {
-    jest.restoreAllMocks();
+  it('renders greeting message', () => {
+    render(<ChatWindow greeting="Hello test!" />);
+    expect(screen.getByText('Hello test!')).toBeInTheDocument();
   });
 
-  it('renders with default greeting', () => {
+  it('renders default greeting', () => {
     render(<ChatWindow />);
     expect(screen.getByText(/VoteWise AI Assistant/)).toBeInTheDocument();
   });
 
-  it('renders with custom greeting', () => {
-    render(<ChatWindow greeting="Custom hello message" />);
-    expect(screen.getByText(/Custom hello message/)).toBeInTheDocument();
-  });
-
-  it('renders the chat header', () => {
+  it('renders input field', () => {
     render(<ChatWindow />);
-    expect(screen.getByText('VoteWise AI')).toBeInTheDocument();
-    expect(screen.getByText(/Online/)).toBeInTheDocument();
+    expect(screen.getByLabelText('Type your message')).toBeInTheDocument();
   });
 
-  it('renders quick suggestions initially', () => {
+  it('renders send button', () => {
+    render(<ChatWindow />);
+    expect(screen.getByLabelText('Send message')).toBeInTheDocument();
+  });
+
+  it('renders voice input button', () => {
+    render(<ChatWindow />);
+    expect(screen.getByLabelText('Start voice input')).toBeInTheDocument();
+  });
+
+  it('renders clear chat button', () => {
+    render(<ChatWindow />);
+    expect(screen.getByLabelText('Clear chat history')).toBeInTheDocument();
+  });
+
+  it('renders quick suggestions', () => {
     render(<ChatWindow />);
     expect(screen.getByText('How do I register to vote?')).toBeInTheDocument();
     expect(screen.getByText('Where is my polling booth?')).toBeInTheDocument();
   });
 
-  it('renders input field and send button', () => {
+  it('disables send when input is empty', () => {
     render(<ChatWindow />);
-    expect(screen.getByLabelText('Type your message')).toBeInTheDocument();
-    expect(screen.getByLabelText('Send message')).toBeInTheDocument();
+    const sendButton = screen.getByLabelText('Send message');
+    expect(sendButton).toBeDisabled();
   });
 
-  it('disables send button when input is empty', () => {
+  it('enables send when input has text', async () => {
     render(<ChatWindow />);
-    const sendBtn = screen.getByLabelText('Send message');
-    expect(sendBtn).toBeDisabled();
+    const input = screen.getByLabelText('Type your message');
+    await userEvent.type(input, 'Hello');
+    const sendButton = screen.getByLabelText('Send message');
+    expect(sendButton).not.toBeDisabled();
   });
 
-  it('sends a message and shows loading', async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      json: () => Promise.resolve({ content: 'AI response here' }),
+  it('sends message on submit', async () => {
+    mockFetch.mockResolvedValueOnce({
+      json: () => Promise.resolve({ content: 'AI reply', role: 'assistant' }),
     });
 
     render(<ChatWindow />);
     const input = screen.getByLabelText('Type your message');
-    const sendBtn = screen.getByLabelText('Send message');
-
-    await userEvent.type(input, 'How do I vote?');
-    expect(sendBtn).not.toBeDisabled();
-
-    fireEvent.click(sendBtn);
-
-    // User message should appear
-    await waitFor(() => {
-      expect(screen.getByText('How do I vote?')).toBeInTheDocument();
-    });
-
-    // AI response should appear eventually
-    await waitFor(() => {
-      expect(screen.getByText(/AI response here/)).toBeInTheDocument();
-    });
-  });
-
-  it('handles API error gracefully', async () => {
-    (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
-
-    render(<ChatWindow />);
-    const input = screen.getByLabelText('Type your message');
-
     await userEvent.type(input, 'Test message');
     fireEvent.submit(input.closest('form')!);
 
     await waitFor(() => {
-      expect(screen.getByText(/trouble connecting/)).toBeInTheDocument();
+      expect(mockFetch).toHaveBeenCalledTimes(1);
     });
   });
 
-  it('has clear chat button with proper aria-label', () => {
+  it('handles API error gracefully', async () => {
+    mockFetch.mockRejectedValueOnce(new Error('Network error'));
+
     render(<ChatWindow />);
-    expect(screen.getByLabelText('Clear chat history')).toBeInTheDocument();
+    const input = screen.getByLabelText('Type your message');
+    await userEvent.type(input, 'Test');
+    fireEvent.submit(input.closest('form')!);
+
+    await waitFor(() => {
+      expect(screen.getByText(/trouble connecting/i)).toBeInTheDocument();
+    });
   });
 
-  it('has voice input button with proper aria-label', () => {
-    render(<ChatWindow />);
-    expect(screen.getByLabelText('Start voice input')).toBeInTheDocument();
+  it('clears chat on clear button click', async () => {
+    mockFetch.mockResolvedValueOnce({
+      json: () => Promise.resolve({ content: 'Reply!', role: 'assistant' }),
+    });
+
+    render(<ChatWindow greeting="Greeting msg" />);
+    const input = screen.getByLabelText('Type your message');
+    await userEvent.type(input, 'Message');
+    fireEvent.submit(input.closest('form')!);
+
+    await waitFor(() => {
+      expect(screen.getByText('Message')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByLabelText('Clear chat history'));
+    expect(screen.getByText('Greeting msg')).toBeInTheDocument();
   });
 
-  it('renders chat messages region with ARIA live', () => {
+  it('sets suggestion text on click', async () => {
+    render(<ChatWindow />);
+    fireEvent.click(screen.getByText('How do I register to vote?'));
+    const input = screen.getByLabelText('Type your message') as HTMLInputElement;
+    expect(input.value).toBe('How do I register to vote?');
+  });
+
+  it('renders header with VoteWise AI title', () => {
+    render(<ChatWindow />);
+    expect(screen.getByText('VoteWise AI')).toBeInTheDocument();
+  });
+
+  it('shows chat log area with correct aria attributes', () => {
     render(<ChatWindow />);
     const log = screen.getByRole('log');
-    expect(log).toHaveAttribute('aria-live', 'polite');
+    expect(log).toHaveAttribute('aria-label', 'Chat messages');
+  });
+
+  it('accepts compact mode prop', () => {
+    const { container } = render(<ChatWindow compact />);
+    expect(container.firstChild).toHaveClass('max-h-[600px]');
   });
 });

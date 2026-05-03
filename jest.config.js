@@ -5,8 +5,9 @@ const createJestConfig = nextJest({
 })
 
 const customJestConfig = {
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  setupFilesAfterSetup: ['<rootDir>/jest.setup.js'],
   testEnvironment: 'jest-environment-jsdom',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
@@ -22,9 +23,11 @@ const customJestConfig = {
     'src/components/ui/**/*.{js,jsx,ts,tsx}',
     'src/components/chat/**/*.{js,jsx,ts,tsx}',
     'src/components/maps/**/*.{js,jsx,ts,tsx}',
+    'src/components/layout/**/*.{js,jsx,ts,tsx}',
+    'src/services/**/*.{js,jsx,ts,tsx}',
     '!src/**/*.d.ts',
     '!src/**/*.stories.{js,jsx,ts,tsx}',
-    '!src/**/performance.ts',
+    '!src/**/performance.tsx',
     '!src/**/accessibility.tsx',
     '!src/lib/firebase.ts',
   ],
@@ -34,14 +37,14 @@ const customJestConfig = {
   ],
   coverageThreshold: {
     global: {
-      branches: 30,
-      functions: 30,
-      lines: 30,
-      statements: 30,
+      branches: 45,
+      functions: 55,
+      lines: 55,
+      statements: 55,
     },
   },
   transformIgnorePatterns: [
-    '/node_modules/(?!(firebase|@firebase|openai|@vis.gl)/)',
+    '/node_modules/(?!(firebase|@firebase|openai|@vis.gl|@google)/)',
   ],
 }
 

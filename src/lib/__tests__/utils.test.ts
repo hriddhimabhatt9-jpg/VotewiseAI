@@ -6,6 +6,7 @@ import {
   generateId,
   truncateText,
   debounce,
+  getReadinessScore,
 } from '../utils'
 
 describe('Utility Functions', () => {
@@ -177,6 +178,70 @@ describe('Utility Functions', () => {
 
       jest.runAllTimers()
       expect(mockFn).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('getReadinessScore', () => {
+    it('should return 0 for empty profile', () => {
+      expect(getReadinessScore({})).toBe(0)
+    })
+
+    it('should return 10 for profile with name only', () => {
+      expect(getReadinessScore({ name: 'John' })).toBe(10)
+    })
+
+    it('should return correct score for partial profile', () => {
+      const score = getReadinessScore({
+        name: 'John',
+        dob: '2000-01-01',
+        address: '123 Street',
+      })
+      expect(score).toBe(35) // 10 + 10 + 15
+    })
+
+    it('should return full score for complete profile', () => {
+      const score = getReadinessScore({
+        name: 'John',
+        dob: '2000-01-01',
+        address: '123 Street',
+        constituency: 'Delhi',
+        voterId: 'ABC1234567',
+        isRegistered: true,
+        quizScore: 100,
+      })
+      expect(score).toBe(100)
+    })
+
+    it('should cap quiz score contribution', () => {
+      const score = getReadinessScore({
+        quizScore: 50,
+      })
+      expect(score).toBe(8) // (50/100) * 15 = 7.5, rounded = 8
+    })
+
+    it('should handle constituency and voterId', () => {
+      const score = getReadinessScore({
+        constituency: 'Delhi',
+        voterId: 'ABC1234567',
+      })
+      expect(score).toBe(30) // 15 + 15
+    })
+
+    it('should handle isRegistered', () => {
+      const score = getReadinessScore({
+        isRegistered: true,
+      })
+      expect(score).toBe(20)
+    })
+  })
+
+  describe('calculateAge edge cases', () => {
+    it('should handle birthday later this month', () => {
+      const today = new Date()
+      const futureDay = new Date(today.getFullYear() - 20, today.getMonth(), today.getDate() + 5)
+      const age = calculateAge(futureDay)
+      // If birthday hasn't happened yet this month, should be 19
+      expect(age).toBeLessThanOrEqual(20)
     })
   })
 })

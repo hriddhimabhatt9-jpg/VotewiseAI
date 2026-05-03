@@ -1,29 +1,25 @@
 /**
  * API Route: Get Maps API Key
- * Provides Google Maps API key securely to frontend
- * This prevents the key from being exposed directly in client-side code
+ * Provides Google Maps API key securely to frontend via /my_api
  */
 
-import { NextResponse, NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
+import { GOOGLE_MAPS_API_KEY } from '../../../../my_api'
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
-    // In production, add auth checks here to verify the user
-    const mapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-
-    if (!mapsApiKey) {
+    if (!GOOGLE_MAPS_API_KEY) {
       return NextResponse.json(
         { error: 'Maps API key not configured' },
         { status: 500 }
       )
     }
 
-    // Return a restricted key if possible, or limit its use to specific origins
     return NextResponse.json(
-      { apiKey: mapsApiKey },
+      { apiKey: GOOGLE_MAPS_API_KEY },
       {
         headers: {
-          'Cache-Control': 'private, max-age=3600', // Cache for 1 hour
+          'Cache-Control': 'private, max-age=3600',
           'X-Content-Type-Options': 'nosniff',
         },
       }

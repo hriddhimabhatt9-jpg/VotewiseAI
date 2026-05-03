@@ -4,6 +4,7 @@ node_modules
 .gitignore
 .env*
 !.env.example
+!.env.production
 coverage
 *.md
 !README.md

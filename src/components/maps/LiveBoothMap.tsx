@@ -11,6 +11,7 @@ import {
   ControlPosition,
   MapControl
 } from '@vis.gl/react-google-maps';
+import { candidatesData } from '@/lib/data';
 
 interface Booth {
   id: string;
@@ -19,12 +20,13 @@ interface Booth {
   lng: number;
   address: string;
   waitLevel: 'low' | 'medium' | 'high';
+  candidateId?: string;
 }
 
 const MOCK_BOOTHS: Booth[] = [
-  { id: '1', name: 'KV No. 1, RK Puram', lat: 28.5634, lng: 77.1724, address: 'Sector 12, RK Puram, New Delhi', waitLevel: 'low' },
-  { id: '2', name: 'Sarvodaya School', lat: 28.5712, lng: 77.1845, address: 'Sector 4, RK Puram, New Delhi', waitLevel: 'medium' },
-  { id: '3', name: 'Community Center', lat: 28.5589, lng: 77.1656, address: 'Sector 9, RK Puram, New Delhi', waitLevel: 'high' },
+  { id: '1', name: 'KV No. 1, RK Puram', lat: 28.5634, lng: 77.1724, address: 'Sector 12, RK Puram, New Delhi', waitLevel: 'low', candidateId: '1' },
+  { id: '2', name: 'Sarvodaya School', lat: 28.5712, lng: 77.1845, address: 'Sector 4, RK Puram, New Delhi', waitLevel: 'medium', candidateId: '2' },
+  { id: '3', name: 'Community Center', lat: 28.5589, lng: 77.1656, address: 'Sector 9, RK Puram, New Delhi', waitLevel: 'high', candidateId: '3' },
 ];
 
 interface LiveBoothMapProps {
@@ -138,10 +140,10 @@ export default function LiveBoothMap({ transportMode = 'DRIVING', destination = 
               position={{ lat: selectedBooth.lat, lng: selectedBooth.lng }}
               onCloseClick={() => setSelectedBooth(null)}
             >
-              <div className="p-2 min-w-[200px] text-gray-900">
+              <div className="p-2 min-w-[220px] text-gray-900">
                 <h4 className="font-bold text-sm">{selectedBooth.name}</h4>
                 <p className="text-xs text-gray-500 mb-2">{selectedBooth.address}</p>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 mb-3">
                   <span className={`w-2 h-2 rounded-full ${
                     selectedBooth.waitLevel === 'low' ? 'bg-green-500' : 
                     selectedBooth.waitLevel === 'medium' ? 'bg-yellow-500' : 'bg-red-500'
@@ -150,6 +152,23 @@ export default function LiveBoothMap({ transportMode = 'DRIVING', destination = 
                     {selectedBooth.waitLevel} Wait Time
                   </span>
                 </div>
+                
+                {selectedBooth.candidateId && (() => {
+                  const candidate = candidatesData.find(c => c.id === selectedBooth.candidateId);
+                  if (!candidate) return null;
+                  return (
+                    <div className="mt-2 pt-2 border-t border-gray-200">
+                      <p className="text-[10px] font-bold text-gray-500 uppercase mb-1">Local Candidate</p>
+                      <div className="flex items-center gap-2">
+                        <img src={candidate.image} alt={candidate.name} className="w-10 h-10 rounded-full object-cover border border-gray-300 shadow-sm" />
+                        <div>
+                          <p className="text-sm font-bold text-gray-800">{candidate.name}</p>
+                          <p className="text-[10px] text-gray-600 font-medium">{candidate.party} {candidate.partySymbol}</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             </InfoWindow>
           )}

@@ -18,9 +18,11 @@ COPY . .
 # Next.js telemetry disabled
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Next.js auto-loads .env.production during `npm run build`
-# NEXT_PUBLIC_ vars get baked into the client bundle at build time
-# Server-only vars (GEMINI_API, etc.) are injected at runtime via Cloud Run env vars
+# Verify .env.production is present (Next.js loads it automatically during build)
+RUN if [ -f .env.production ]; then echo "✅ .env.production found"; else echo "⚠️ .env.production not found"; fi
+
+# Build the application
+# Next.js reads .env.production automatically and bakes NEXT_PUBLIC_* vars into the client bundle
 RUN npm run build
 
 # Production image

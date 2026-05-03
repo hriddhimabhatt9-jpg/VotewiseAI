@@ -1,0 +1,44 @@
+# .gcloudignore — controls which files are uploaded to Cloud Build
+# This is separate from .gitignore and .dockerignore
+
+# Node modules (installed during build)
+node_modules/
+
+# Build artifacts
+.next/
+/out/
+/build/
+/coverage/
+
+# Git
+.git/
+.gitignore
+
+# Development env files — exclude these
+.env.local
+.env.development
+.env.staging
+.env.local.example
+
+# IMPORTANT: .env.production is NOT excluded here
+# It MUST be uploaded so Next.js can bake NEXT_PUBLIC_* vars during build
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+deploy_debug.log
+
+# Private keys text file
+my_api_keys.txt
+
+# my_api folder (secrets, not needed in build)
+my_api/
+
+# Misc
+*.pem
+.DS_Store
+*.swp
+*.swo

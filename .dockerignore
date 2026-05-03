@@ -2,9 +2,11 @@ node_modules
 .next
 .git
 .gitignore
-.env*
-!.env.example
-!.env.production
+.env.local
+.env.development
+.env.staging
+.env.example
+.env.local.example
 coverage
 *.md
 !README.md
@@ -12,3 +14,4 @@ deploy_debug.log
 .vscode
 .idea
 my_api_keys.txt
+my_api/

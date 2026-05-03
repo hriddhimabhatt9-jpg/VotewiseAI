@@ -66,9 +66,9 @@ export function Navbar() {
 
   return (
     <>
-      <motion.nav
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
+      <nav
+        aria-label="Main navigation"
+        role="navigation"
         className={cn(
           "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
           "bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl",
@@ -116,7 +116,8 @@ export function Navbar() {
               <button
                 onClick={toggleLang}
                 className="px-3 py-1.5 rounded-xl text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                title="Toggle Language"
+                aria-label={lang === "en" ? "Switch to Hindi" : "Switch to English"}
+                title={lang === "en" ? "Switch to Hindi" : "Switch to English"}
               >
                 {lang === "en" ? "A/अ" : "अ/A"}
               </button>
@@ -138,6 +139,9 @@ export function Navbar() {
                         if (unreadCount > 0) setUnreadCount(0);
                       }}
                       className="relative p-2.5 rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                      aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
+                      aria-expanded={showNotifications}
+                      aria-haspopup="true"
                     >
                       <Bell className="w-4.5 h-4.5" />
                       {unreadCount > 0 && (
@@ -200,6 +204,9 @@ export function Navbar() {
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                   className="lg:hidden p-2.5 rounded-xl text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+                  aria-expanded={mobileMenuOpen}
+                  aria-controls="mobile-menu"
                 >
                   {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                 </button>
@@ -207,7 +214,7 @@ export function Navbar() {
             </div>
           </div>
         </div>
-      </motion.nav>
+      </nav>
 
       {/* Mobile Menu */}
       <AnimatePresence>

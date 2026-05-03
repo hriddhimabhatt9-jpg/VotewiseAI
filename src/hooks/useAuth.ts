@@ -8,7 +8,6 @@ import {
   signInWithPopup,
   signOut,
   updateProfile,
-  User as FirebaseUser
 } from "firebase/auth";
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db, googleProvider, isDemoMode } from "@/lib/firebase";
@@ -24,6 +23,33 @@ const DEFAULT_PROFILE: Partial<UserProfile> = {
   isRegistered: false,
 };
 
+/** Set auth cookie for middleware route protection */
+function setAuthCookie(token: string | null) {
+  if (typeof document === 'undefined') return;
+  if (token) {
+    document.cookie = `auth-token=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+  } else {
+    document.cookie = 'auth-token=; path=/; max-age=0; SameSite=Lax';
+  }
+}
+
+/** Map Firebase error codes to user-friendly messages */
+function getAuthErrorMessage(error: { code?: string; message?: string }): string {
+  const errorMap: Record<string, string> = {
+    'auth/user-not-found': 'No account found with this email address.',
+    'auth/wrong-password': 'Incorrect password. Please try again.',
+    'auth/email-already-in-use': 'An account with this email already exists.',
+    'auth/weak-password': 'Password is too weak. Please use a stronger password.',
+    'auth/invalid-email': 'Please enter a valid email address.',
+    'auth/too-many-requests': 'Too many attempts. Please try again later.',
+    'auth/popup-closed-by-user': 'Sign-in popup was closed. Please try again.',
+    'auth/network-request-failed': 'Network error. Please check your connection.',
+    'auth/invalid-credential': 'Invalid credentials. Please check your email and password.',
+  };
+
+  return errorMap[error.code || ''] || 'An unexpected error occurred. Please try again.';
+}
+
 export function useAuth() {
   const { user, loading, setUser, setLoading } = useAuthStore();
 
@@ -33,7 +59,7 @@ export function useAuth() {
       if (loading) {
         setLoading(false);
       }
-    }, 2000);
+    }, 3000);
 
     if (isDemoMode) {
       setLoading(false);
@@ -44,6 +70,10 @@ export function useAuth() {
       clearTimeout(timeout);
       if (firebaseUser) {
         try {
+          // Set auth cookie for middleware
+          const token = await firebaseUser.getIdToken();
+          setAuthCookie(token);
+
           const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
           if (userDoc.exists()) {
             setUser(userDoc.data() as UserProfile);
@@ -61,7 +91,8 @@ export function useAuth() {
             setUser(newProfile);
           }
         } catch (error) {
-          console.error("Error fetching user profile:", error);
+          // Fallback: set user from Firebase Auth data even if Firestore fails
+          setAuthCookie('demo-token');
           setUser({
             ...DEFAULT_PROFILE,
             uid: firebaseUser.uid,
@@ -71,6 +102,7 @@ export function useAuth() {
           } as UserProfile);
         }
       } else {
+        setAuthCookie(null);
         setUser(null);
       }
       setLoading(false);
@@ -93,6 +125,7 @@ export function useAuth() {
         updatedAt: new Date().toISOString(),
       } as UserProfile;
       setUser(demoUser);
+      setAuthCookie('demo-token');
       toast.success("Welcome back (Demo Mode)! 🎉");
       return;
     }
@@ -100,8 +133,9 @@ export function useAuth() {
       setLoading(true);
       await signInWithEmailAndPassword(auth, email, password);
       toast.success("Welcome back! 🎉");
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error: unknown) {
+      const authError = error as { code?: string; message?: string };
+      toast.error(getAuthErrorMessage(authError));
     } finally {
       setLoading(false);
     }
@@ -118,6 +152,7 @@ export function useAuth() {
         updatedAt: new Date().toISOString(),
       } as UserProfile;
       setUser(demoUser);
+      setAuthCookie('demo-token');
       toast.success("Account created (Demo Mode)! 🎊");
       return;
     }
@@ -136,8 +171,9 @@ export function useAuth() {
       await setDoc(doc(db, "users", firebaseUser.uid), newProfile);
       setUser(newProfile);
       toast.success("Account created successfully! 🎊");
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error: unknown) {
+      const authError = error as { code?: string; message?: string };
+      toast.error(getAuthErrorMessage(authError));
     } finally {
       setLoading(false);
     }
@@ -153,6 +189,7 @@ export function useAuth() {
         photoURL: "",
       } as UserProfile;
       setUser(demoUser);
+      setAuthCookie('demo-token');
       toast.success("Signed in with Google (Demo Mode)! 🎉");
       return;
     }
@@ -160,8 +197,9 @@ export function useAuth() {
       setLoading(true);
       await signInWithPopup(auth, googleProvider);
       toast.success("Signed in with Google! 🎉");
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error: unknown) {
+      const authError = error as { code?: string; message?: string };
+      toast.error(getAuthErrorMessage(authError));
     } finally {
       setLoading(false);
     }
@@ -172,10 +210,12 @@ export function useAuth() {
       if (!isDemoMode) {
         await signOut(auth);
       }
+      setAuthCookie(null);
       setUser(null);
       toast.success("Logged out successfully");
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error: unknown) {
+      const authError = error as { code?: string; message?: string };
+      toast.error(getAuthErrorMessage(authError));
     }
   };
 

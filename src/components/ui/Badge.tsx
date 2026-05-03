@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useMemo } from "react";
 import { cn } from "@/lib/utils";
 
@@ -73,7 +75,14 @@ export const ProgressBar = React.memo(({
   };
 
   return (
-    <div className={cn("w-full", className)}>
+    <div
+      className={cn("w-full", className)}
+      role="progressbar"
+      aria-valuenow={Math.round(percentage)}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-label={`Progress: ${Math.round(percentage)}%`}
+    >
       {showLabel && (
         <div className="flex justify-between mb-1.5">
           <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Progress</span>
@@ -171,8 +180,15 @@ export const ScoreRing = React.memo(({ score, size = 120, strokeWidth = 8, class
   }, [score]);
 
   return (
-    <div className={cn("relative inline-flex items-center justify-center", className)}>
-      <svg width={size} height={size} className="-rotate-90">
+    <div
+      className={cn("relative inline-flex items-center justify-center", className)}
+      role="meter"
+      aria-valuenow={score}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-label={`Score: ${score} out of 100`}
+    >
+      <svg width={size} height={size} className="-rotate-90" aria-hidden="true">
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -195,7 +211,7 @@ export const ScoreRing = React.memo(({ score, size = 120, strokeWidth = 8, class
           className="transition-all duration-1000 ease-out"
         />
       </svg>
-      <div className="absolute flex flex-col items-center">
+      <div className="absolute flex flex-col items-center" aria-hidden="true">
         <span className="text-2xl font-bold text-gray-800 dark:text-white">{score}</span>
         <span className="text-xs text-gray-500 dark:text-gray-400">/ 100</span>
       </div>

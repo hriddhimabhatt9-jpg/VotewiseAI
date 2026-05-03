@@ -17,10 +17,11 @@ export function Button({
   className,
   children,
   disabled,
+  "aria-label": ariaLabel,
   ...props
 }: ButtonProps) {
   const baseStyles =
-    "inline-flex items-center justify-center font-semibold rounded-2xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]";
+    "inline-flex items-center justify-center font-semibold rounded-2xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus-visible:ring-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]";
 
   const variants = {
     primary:
@@ -45,6 +46,8 @@ export function Button({
     <button
       className={cn(baseStyles, variants[variant], sizes[size], className)}
       disabled={disabled || isLoading}
+      aria-busy={isLoading || undefined}
+      aria-label={ariaLabel}
       {...props}
     >
       {isLoading && (
@@ -52,6 +55,7 @@ export function Button({
           className="animate-spin -ml-1 h-4 w-4"
           fill="none"
           viewBox="0 0 24 24"
+          aria-hidden="true"
         >
           <circle
             className="opacity-25"
@@ -68,6 +72,7 @@ export function Button({
           />
         </svg>
       )}
+      {isLoading && <span className="sr-only">Loading...</span>}
       {children}
     </button>
   );

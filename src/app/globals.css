@@ -137,3 +137,72 @@
 .toast-custom {
   @apply rounded-2xl shadow-xl;
 }
+
+/* Screen reader only utility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* High contrast mode */
+.high-contrast {
+  --color-text: 0 0 0;
+  --color-bg: 255 255 255;
+  --color-border: 0 0 0;
+}
+
+.high-contrast * {
+  border-color: #000 !important;
+}
+
+.high-contrast a,
+.high-contrast button {
+  outline: 2px solid transparent;
+}
+
+.high-contrast a:focus,
+.high-contrast button:focus {
+  outline: 3px solid #000 !important;
+  outline-offset: 2px;
+}
+
+.dark.high-contrast {
+  --color-text: 255 255 255;
+  --color-bg: 0 0 0;
+  --color-border: 255 255 255;
+}
+
+.dark.high-contrast * {
+  border-color: #fff !important;
+}
+
+.dark.high-contrast a:focus,
+.dark.high-contrast button:focus {
+  outline: 3px solid #fff !important;
+  outline-offset: 2px;
+}
+
+/* Focus visible styles */
+:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

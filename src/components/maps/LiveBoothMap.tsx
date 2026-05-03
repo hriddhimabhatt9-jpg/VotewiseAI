@@ -178,7 +178,7 @@ function Directions({ origin, destination, travelMode }: {
 
   useEffect(() => {
     if (!directionsService || !directionsRenderer || !origin || !destination) {
-      if (directionsRenderer) directionsRenderer.setDirections({ routes: [] });
+      if (directionsRenderer) directionsRenderer.setDirections({ routes: [] } as any);
       return;
     }
 
